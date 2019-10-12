@@ -55,7 +55,7 @@ for file in files_found:
 			print("	", line)
 		
 # Connect to gitlab
-git = gitlab.Gitlab(host, job_token = proj_job_token)
+git = gitlab.Gitlab(host, job_token = proj_job_token, ssl_verify=False)
 if not git:
     sys.exit("Failed to connect")
 
@@ -69,3 +69,4 @@ project = git.projects.get(proj_ID)
 f = project.repository_tree()
 for x in f:
 	print(x)
+
