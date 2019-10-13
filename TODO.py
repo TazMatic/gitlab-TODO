@@ -8,7 +8,9 @@ PARAM2: job_token
 PARAM3: Project ID
 PARAM4: Project Directory
 '''
-
+'''
+The only token you use for that is a PAT (personal access token). Give it an API scope. Just make sure you add it as a CI env variable instead of committing secrets to your repo
+'''
 class file_to_scrape:
   def __init__(self, name, path):
     self.name = name
