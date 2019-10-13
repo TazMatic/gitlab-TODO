@@ -4,13 +4,11 @@ import gitlab
 
 '''
 PARAM1: Gitlab Host
-PARAM2: job_token
+PARAM2: Personal access token
 PARAM3: Project ID
 PARAM4: Project Directory
 '''
-'''
-The only token you use for that is a PAT (personal access token). Give it an API scope. Just make sure you add it as a CI env variable instead of committing secrets to your repo
-'''
+
 class file_to_scrape:
   def __init__(self, name, path):
     self.name = name
@@ -20,14 +18,14 @@ class file_to_scrape:
 if len(sys.argv) != 5:
 	sys.exit("Missing parameters:\n"
 	"	PARAM1: Gitlab Host\n"
-	"	PARAM2: job_token\n"
+	"	PARAM2: Personal Access Token\n"
 	"	PARAM3: Project ID\n"
 	"	PARAM4: Project Directory\n")
 
 
 host = sys.argv[1]
-proj_job_token = sys.argv[2]
-proj_ID = sys.argv[3]
+PAT = sys.argv[2]
+proj_ID = int(sys.argv[3])
 files_found = []
 
 directory = sys.argv[4]
@@ -57,18 +55,15 @@ for file in files_found:
 			print("	", line)
 		
 # Connect to gitlab
-git = gitlab.Gitlab(host, job_token = proj_job_token, ssl_verify=False)
+host = "http://" + host
+git = gitlab.Gitlab(host, private_token = PAT)
 if not git:
     sys.exit("Failed to connect")
-
-# Display all projects
-projects = git.projects.list()
-for project in projects:
-    print(project)
 	
 # Display all files
 project = git.projects.get(proj_ID)
 f = project.repository_tree()
 for x in f:
 	print(x)
+
 
