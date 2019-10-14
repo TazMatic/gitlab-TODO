@@ -8,8 +8,6 @@ TODO-parser:
   stage: TODO-parser
   script:
     - echo "Parsing for TODO's"
-    - echo $CI_SERVER_HOST $PAT $CI_PROJECT_ID $CI_PROJECT_DIR
     - printenv 
-    - ls -lisa
-    - pip3 install python-gitlab
-    - python TODO.py $CI_SERVER_HOST $PAT $CI_PROJECT_ID .
+    - pip3 install python-gitlab glob2
+    - python3 TODO.py
