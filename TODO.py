@@ -1,71 +1,51 @@
 import sys
 import os
+import glob2
 import gitlab
 
-'''
-PARAM1: Gitlab Host
-PARAM2: Job Token
-PARAM3: Project ID
-PARAM4: Project Directory
-'''
+
+class GitConnect:
+    def __init__(self):
+        self.host = "".join(["https://", os.getenv("CI_SERVER_HOST")])
+        self.projectPath = os.getenv("CI_PROJECT_PATH")
+        self.token = os.getenv("PAT")
+        self.connection = None
+        self.project = None
+        self.setup()
+
+    def setup(self):
+        self.connection = gitlab.Gitlab(self.host, self.token, api_version="4")
+        self.connection.auth()
+        self.project = self.connection.projects.get(self.projectPath)
+
+    def create_issue(self, title, description):
+        issue = self.project.issues.create({'title': title, 'description': description})
+        issue.labels = ["TODO"]
+        issue.save()
 
 
 class FileToScrape:
-    def __init__(self, name, path):
-        self.name = name
+    def __init__(self, path):
         self.path = path
-        self.todo_lines = []
+        self.name = self.path.split("/")[-1]
+        self.lines = None
+
+    def read(self):
+        try:
+            with open(self.path, "r") as f:
+                self.lines = [line for line in f.readlines() if "TODO" in line]
+        #TODO fix this shit asshole
+        except Exception as e:
+            print(e)
 
 
-if len(sys.argv) != 5:
-    sys.exit("Missing parameters:\n"
-             "	PARAM1: Gitlab Host\n"
-             "	PARAM2: Job Token\n"
-             "	PARAM3: Project ID\n"
-             "	PARAM4: Project Directory\n")
-
-
-host = sys.argv[1]
-proj_job_token = sys.argv[2]
-proj_ID = int(sys.argv[3])
-files_found = []
-
-directory = sys.argv[4]
-if not os.path.isdir(directory):
-    sys.exit("Directory is not accessible or is not a directory")
-
-
-# Find all python files
-for root, _, files in os.walk(directory, topdown=False):
-    for filename in files:
-        file_path = os.path.join(root, filename)
-        # TODO support more than python files
-        if os.path.isfile(file_path) and file_path.endswith('.py'):
-            file = FileToScrape(filename, file_path)
-            files_found.append(file)
-
-# Create a list of lines containing # TODO
-# TODO Add try around here encase the file is not ASCII
-for file in files_found:
-    for line in open(file.path, "rt"):
-        if "# TODO" in line or "#TODO" in line:
-            file.todo_lines.append(line.strip())
-# Display todo_lines
-for file in files_found:
-    print(file.name)
-    for line in file.todo_lines:
-        print("	", line)
-
-# Connect to gitlab
-host = "https://" + host
-git = gitlab.Gitlab(host, job_token=proj_job_token)
-if not git:
-    sys.exit("Failed to connect")
-
-# Display all files
-project = git.projects.get(proj_ID)
-f = project.repository_tree()
-for x in f:
-    print(x)
- 
-
+if __name__ == "__main__":
+    files = dict()
+    gl = GitConnect()
+    for file in glob2.glob("./**/*.py"):
+        x = FileToScrape(file)
+        files[x.name] = x
+        x.read()
+        for line in x.lines:
+            gl.create_issue(x.name, line.strip())
+            print(x.name, line.strip())
