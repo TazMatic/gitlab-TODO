@@ -8,6 +8,5 @@ TODO-parser:
   stage: TODO-parser
   script:
     - echo "Parsing for TODO's"
-    - printenv 
     - pip3 install python-gitlab glob2
     - python3 TODO.py
